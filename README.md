@@ -16,7 +16,7 @@ The current approach assumes the client runs on a host without a browser.
 
 2. Once the login is successful, the user must copy the response URL and provide to the client program.
 
- Note that the default redirect URL `https://example.com/redirect` use the Example Domain and provide a generic message. You will want to copy the generated URL from the browser location bar into the command line program. The url should look something like `https://example.com/redirect?state={characters}&code={characters}`. The state and code are used to complete the OAuth access token exchange process.
+   Note that the default redirect URL `https://example.com/redirect` use the special-use example domain and the browser will display a generic message. You will need to copy the generated URL from the browser location bar into the command line program. The url should look something like `https://example.com/redirect?state={characters}&code={characters}`. The state and code are used to complete the OAuth access token exchange process.
 
 By default, a .token.json file is created to store the OAuth2 Access Bearer token.
 
