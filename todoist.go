@@ -70,7 +70,7 @@ func (c *TodoistClient) Get(urlString string, query url.Values) (body []byte, er
 	// add the query parameters to the URL
 	url.RawQuery = query.Encode()
 
-	fmt.Println("DEBUG:", url.String())
+	//fmt.Println("DEBUG:", url.String())
 
 	// execute the request
 	resp, err := c.httpClient.Get(url.String())
@@ -115,7 +115,7 @@ func (c *TodoistClient) Put(urlString string, query url.Values, data io.Reader) 
 	// add the query parameters to the URL
 	url.RawQuery = query.Encode()
 
-	fmt.Println("DEBUG:", url.String())
+	//fmt.Println("DEBUG:", url.String())
 
 	req, err := http.NewRequest(http.MethodPut, url.String(), data)
 	if err != nil {
