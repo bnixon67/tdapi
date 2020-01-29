@@ -43,7 +43,7 @@ const (
 	authBase    = "https://todoist.com/oauth"
 	authURL     = authBase + "/authorize"
 	tokenURL    = authBase + "/access_token"
-	redirectURL = "http://localhost/redirect"
+	redirectURL = "https://example.com/redirect"
 )
 
 // init sets default logging flags
