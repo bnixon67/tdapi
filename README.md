@@ -1,3 +1,28 @@
 # tdapi
 
-Go client for Todoist REST API
+tdapi provides a Go interface for the [Todoist REST API](https://developer.todoist.com/rest/v1/).
+
+**This package and any related application is not created by, affiliated with, or supported by Doist.**
+
+**This is still a work in progress, but does have some working examples.**
+
+In order to use this package, you must register an application in the [Todoist App Management console](https://developer.todoist.com/appconsole.html). Use **http://localhost/redirect** as the **OAuth redirect URL** or adjust the source code to match the URL you entered.
+
+In order to run the examples, you need to set the TDCLIENTID and TDCLIENTSECRET environmental variables to the **Client ID** and **Client secret** from the Todoist App Management registration.
+
+The current approach assumes the client runs on a host without a browser.
+
+1. The user is instructed to vist a URL to login and authorize the client.
+
+2. Once the login is successful, the user must copy the response URL and provide to the client program.
+
+...Note that the default redirect URL used will not render in the browser unless you running a webserver on localhost. You can still copy that URL from the browser location bar into the command line program. The url should look something like http://localhost/redirect?state={long set of characters}&code={long set of characters}
+
+By default, a .token.json file will be created to store the OAuth2 Access Bearer token.
+
+If you don't want to use OAuth and register an application, you can manually create a .json.token file, which looks like the json file below, with your API token from https://todoist.com/prefs/integrations:
+```json
+{"access_token":"{replace with your API token}","token_type":"Bearer","expiry":"0001-01-01T00:00:00Z"}
+```
+
+**DO NOT SHARE YOUR API TOKEN OR THE TOKEN FILE CREATED BY THE APP. ANYONE WITH THAT TOKEN HAS ACCESS TO YOUR TODOIST ACCOUNT.**
