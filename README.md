@@ -16,7 +16,7 @@ The current approach assumes the client runs on a host without a browser.
 
 2. Once the login is successful, the user must copy the response URL and provide to the client program.
 
- Note that the default redirect URL used will not render in the browser unless you running a webserver on localhost. You can still copy that URL from the browser location bar into the command line program. The url should look something like http://localhost/redirect?state={long set of characters}&code={long set of characters}
+ Note that the default redirect URL used will not render in the browser unless you running a webserver on localhost. You can still copy that URL from the browser location bar into the command line program. The url should look something like `http://localhost/redirect?state={characters}&code={characters}`
 
 By default, a .token.json file is created to store the OAuth2 Access Bearer token.
 
