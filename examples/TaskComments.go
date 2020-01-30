@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -68,19 +66,20 @@ func main() {
 	tokenFile, scopes := ParseCommandLine()
 
 	// need one remaining arg for request
-	if len(flag.Args()) != 1 {
+	if len(flag.Args()) != 0 {
 		flag.Usage()
 		return
 	}
 
 	todoistClient := todoist.New(tokenFile, clientID, clientSecret, scopes)
 
-	resp, err := todoistClient.Get(flag.Arg(0), nil)
+	comments, err := todoistClient.GetTaskComments(3652140563)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var out bytes.Buffer
-	json.Indent(&out, resp, "", " ")
-	fmt.Print(out.String())
+	fmt.Printf("count(Comments) = %d\n", len(comments))
+	for _, comment := range comments {
+		fmt.Println(todoist.VarToJsonString(comment))
+	}
 }

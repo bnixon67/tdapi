@@ -84,3 +84,85 @@ type Task struct {
 	// DateTime when Task was created.
 	Created time.Time `json:"created"`
 }
+
+type Label struct {
+	// The id of the label.
+	ID int `json:"id"`
+
+	// The name of the label.
+	Name string `json:"name"`
+
+	// Color id. It’s a value between 30 and 49, refer to Colors for more info.
+	Color int `json:"color"`
+
+	// Label’s order in the label list (a number, where the smallest
+	// value should place the label at the top).
+	ItemOrder int `json:"item_order"`
+
+	// Whether the label is marked as deleted (where 1 is true and 0 is false).
+	IsDeleted int `json:"is_deleted"`
+
+	// Whether the label is favorite (where 1 is true and 0 is false).
+	IsFavorite int `json:"is_favorite"`
+}
+
+// colors
+/*
+Id	Hexadecimal	Id	Hexadecimal
+30	#b8256f		40	#96c3eb
+31	#db4035		41	#4073ff
+32	#ff9933		42	#884dff
+33	#fad000		43	#af38eb
+34	#afb83b		44	#eb96eb
+35	#7ecc49		45	#e05194
+36	#299438		46	#ff8d85
+37	#6accbc		47	#808080
+38	#158fad		48	#b8b8b8
+39	#14aaf5		49	#ccac93
+*/
+
+type Comment struct {
+	// Comment id.
+	ID int `json:"id"`
+
+	// Comment’s task id (for task comments).
+	TaskID int `json:"task_id,omitempty"`
+
+	// Comment’s project id (for project comments).
+	ProjectID int `json:"project_id,omitempty"`
+
+	// Date and time when comment was added, RFC3339 format in UTC.
+	Posted time.Time `json:"posted"`
+
+	// Comment content.
+	Content string `json:"content"`
+
+	// Attachment file (optional).
+	Attachment struct {
+		// The name of the file.
+		FileName string `json:"file_name,omitempty"`
+
+		// MIME type (i.e. text/plain, image/png).
+		FileType string `json:"file_type,omitempty"`
+
+		// The URL where the file is located (a string value
+		// representing an HTTP URL). Note that we don’t cache
+		// the remote content on our servers and stream or expose
+		// files directly from third party resources. In particular
+		// this means that you should avoid providing links to
+		// non-encrypted (plain HTTP) resources, as exposing this
+		// files in Todoist may issue a browser warning.
+		FileURL string `json:"file_url,omitempty"`
+
+		FileSize    int    `json:"file_size,omitempty"`
+		UploadState string `json:"upload_state,omitempty"`
+
+		ResourceType string `json:"resource_type"`
+
+		SiteName    string `json:"site_name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Title       string `json:"title,omitempty"`
+		URL         string `json:"url,omitempty"`
+		FavIcon     string `json:"favicon,omitempty"`
+	} `json:"attachment"`
+}
