@@ -34,7 +34,7 @@ func ParseCommandLine() (tokenFile string, scopes []string) {
 		flag.PrintDefaults()
 	}
 
-	flag.StringVar(&tokenFile, "token", ".token.json", "path to `file` to use for token")
+	flag.StringVar(&tokenFile, "token", ".token.todoist", "path to `file` to use for token")
 
 	var scopeString string
 	flag.StringVar(&scopeString,
@@ -71,7 +71,7 @@ func main() {
 		return
 	}
 
-	todoistClient := todoist.New(tokenFile, clientID, clientSecret, scopes)
+	todoistClient := tdapi.New(tokenFile, clientID, clientSecret, scopes)
 
 	comments, err := todoistClient.GetTaskComments(3652140563)
 	if err != nil {
@@ -80,6 +80,6 @@ func main() {
 
 	fmt.Printf("count(Comments) = %d\n", len(comments))
 	for _, comment := range comments {
-		fmt.Println(todoist.VarToJsonString(comment))
+		fmt.Println(tdapi.VarToJsonString(comment))
 	}
 }

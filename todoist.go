@@ -15,9 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Package msgraph4go provides a Go interface for the Microsoft Graph API.
-// See https://developer.microsoft.com/en-us/graph for more details on the Graph API.
-package todoist
+package tdapi
 
 import (
 	"bufio"

@@ -22,19 +22,22 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/bnixon67/tdapi"
 )
 
-func ParseCommandLine() (tokenFile string, scopes []string) {
+func ParseCommandLine() (tokenFile string, scopes []string, label string) {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [options] request\n", os.Args[0])
 		fmt.Fprintln(flag.CommandLine.Output(), "options:")
 		flag.PrintDefaults()
 	}
 
-	flag.StringVar(&tokenFile, "token", ".token.json", "path to `file` to use for token")
+	flag.StringVar(&tokenFile, "token", ".token.todoist", "path to `file` to use for token")
+
+	flag.StringVar(&label, "label", "", "label to filter tasks")
 
 	var scopeString string
 	flag.StringVar(&scopeString,
@@ -44,7 +47,19 @@ func ParseCommandLine() (tokenFile string, scopes []string) {
 
 	scopes = strings.Split(scopeString, ",")
 
-	return tokenFile, scopes
+	return tokenFile, scopes, label
+}
+
+func ContainsInt(a []int, x int) bool {
+	ret := false
+
+	for _, n := range a {
+		if x == n {
+			ret = true
+		}
+	}
+
+	return (ret)
 }
 
 func main() {
@@ -63,29 +78,91 @@ func main() {
 	}
 
 	// parse command line to get path to the token file and scopes to use in request
-	tokenFile, scopes := ParseCommandLine()
+	tokenFile, scopes, labelStr := ParseCommandLine()
 
-	// need one remaining arg for request
 	if len(flag.Args()) != 0 {
 		flag.Usage()
 		return
 	}
 
-	todoistClient := todoist.New(tokenFile, clientID, clientSecret, scopes)
+	todoistClient := tdapi.New(tokenFile, clientID, clientSecret, scopes)
+
+	projectIntToString := make(map[int]string)
+
+	resp, err := todoistClient.GetAllProjects()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, project := range resp {
+		projectIntToString[project.ID] = project.Name
+	}
+
+	var labelID int
+
+	labelIntToString := make(map[int]string)
+	labelStringToInt := make(map[string]int)
+
+	labels, err := todoistClient.GetAllLabels()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, label := range labels {
+		labelIntToString[label.ID] = label.Name
+		labelStringToInt[label.Name] = label.ID
+
+		if label.Name == labelStr {
+			labelID = label.ID
+		}
+	}
+
+	if labelStr != "" && labelID == 0 {
+		// Label not found
+		fmt.Printf("Label %s not found.\n", labelStr)
+	}
 
 	tasks, err := todoistClient.GetActiveTasks()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("count(Tasks) = %d\n", len(tasks))
-	for n, task := range tasks {
-		fmt.Printf("%d: id=%d %s\n", n, task.ID, task.Content)
-	}
+	sort.Slice(tasks, func(i, j int) bool {
+		if tasks[i].Priority > tasks[j].Priority {
+			return true
+		}
+		if tasks[i].Priority < tasks[j].Priority {
+			return false
+		}
 
-	task, err := todoistClient.GetActiveTask(tasks[len(tasks)-1].ID)
-	if err != nil {
-		log.Fatal(err)
+		iDate := tasks[i].Due.Date
+		if iDate == "" {
+			iDate = "9999-99-99"
+		}
+
+		jDate := tasks[j].Due.Date
+		if jDate == "" {
+			jDate = "9999-99-99"
+		}
+
+		if iDate < jDate {
+			return true
+		}
+		if iDate > jDate {
+			return false
+		}
+
+		return tasks[i].Order < tasks[j].Order
+	})
+
+	for _, task := range tasks {
+		if ContainsInt(task.LabelIds, labelID) || (labelID == 0) {
+			fmt.Printf("%s\n", task.Content)
+			for _, x := range task.LabelIds {
+				fmt.Printf("@%s ", labelIntToString[x])
+			}
+			fmt.Printf("#%s %s\n", projectIntToString[task.ProjectID], task.Due.String)
+			fmt.Println()
+		}
 	}
-	fmt.Println(todoist.VarToJsonString(task))
 }

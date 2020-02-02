@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package todoist
+package tdapi
 
 // APIErrorResponse contains a single property named error.
 type APIErrorResponse struct {
