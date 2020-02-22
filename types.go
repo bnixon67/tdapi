@@ -92,18 +92,11 @@ type Label struct {
 	// The name of the label.
 	Name string `json:"name"`
 
+	// Number used by clients to sort list of labels.
+	Order int `json:"order"`
+
 	// Color id. It’s a value between 30 and 49, refer to Colors for more info.
 	Color int `json:"color"`
-
-	// Label’s order in the label list (a number, where the smallest
-	// value should place the label at the top).
-	ItemOrder int `json:"item_order"`
-
-	// Whether the label is marked as deleted (where 1 is true and 0 is false).
-	IsDeleted int `json:"is_deleted"`
-
-	// Whether the label is favorite (where 1 is true and 0 is false).
-	IsFavorite int `json:"is_favorite"`
 }
 
 // colors
