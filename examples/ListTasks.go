@@ -50,16 +50,13 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string) {
 	return tokenFile, scopes, label
 }
 
-func ContainsInt(a []int, x int) bool {
-	ret := false
-
-	for _, n := range a {
-		if x == n {
-			ret = true
+func ContainsInt(slice []int, want int) bool {
+	for _, value := range slice {
+		if value == want {
+			return true
 		}
 	}
-
-	return (ret)
+	return false
 }
 
 func main() {
@@ -78,56 +75,69 @@ func main() {
 	}
 
 	// parse command line to get path to the token file and scopes to use in request
-	tokenFile, scopes, labelStr := ParseCommandLine()
+	tokenFile, scopes, labelName := ParseCommandLine()
 
+	// print usage if invalid command line
 	if len(flag.Args()) != 0 {
 		flag.Usage()
 		return
 	}
 
+	// create todoist client
 	todoistClient := tdapi.New(tokenFile, clientID, clientSecret, scopes)
 
-	projectIntToString := make(map[int]string)
-
+	// get all projects
 	resp, err := todoistClient.GetAllProjects()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// save projects mapped by project ID
+	mapByProjectID := make(map[int]tdapi.Project)
 	for _, project := range resp {
-		projectIntToString[project.ID] = project.Name
+		mapByProjectID[project.ID] = project
 	}
 
-	var labelID int
-
-	labelIntToString := make(map[int]string)
-	labelStringToInt := make(map[string]int)
-
+	// get all labels
 	labels, err := todoistClient.GetAllLabels()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, label := range labels {
-		labelIntToString[label.ID] = label.Name
-		labelStringToInt[label.Name] = label.ID
+	// store labelID for given label or default to 0 for no label
+	var labelID int
 
-		if label.Name == labelStr {
+	// save labels mapped by label ID
+	mapByLabelID := make(map[int]tdapi.Label)
+
+	// loop thru all labels
+	for _, label := range labels {
+		mapByLabelID[label.ID] = label
+		if label.Name == labelName {
 			labelID = label.ID
 		}
 	}
 
-	if labelStr != "" && labelID == 0 {
-		// Label not found
-		fmt.Printf("Label %s not found.\n", labelStr)
+	// Label not found
+	if labelName != "" && labelID == 0 {
+		fmt.Printf("Label %q not found.\n", labelName)
+		return
 	}
 
+	// sort labels by Order
+	sort.Slice(labels, func(i, j int) bool {
+		return labels[i].Order < labels[j].Order
+	})
+
+	// get all tasks
 	tasks, err := todoistClient.GetActiveTasks()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// sort tasks by priority, date, project order, task order
 	sort.Slice(tasks, func(i, j int) bool {
+		// sort by Priority, reverse order since p4=1 and p1=4
 		if tasks[i].Priority > tasks[j].Priority {
 			return true
 		}
@@ -135,6 +145,8 @@ func main() {
 			return false
 		}
 
+		// sort by Date
+		// copy dates to new variable to default empty date to max value for sorting
 		iDate := tasks[i].Due.Date
 		if iDate == "" {
 			iDate = "9999-99-99"
@@ -152,17 +164,36 @@ func main() {
 			return false
 		}
 
+		// sort by Project order
+		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
+			return true
+		}
+		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
+			return false
+		}
+
+		// sort by Task Order
 		return tasks[i].Order < tasks[j].Order
 	})
 
+	// loop thru and display approproiate tasks
 	for _, task := range tasks {
-		if ContainsInt(task.LabelIds, labelID) || (labelID == 0) {
+		if labelID == 0 || ContainsInt(task.LabelIds, labelID) {
 			fmt.Printf("%s\n", task.Content)
-			for _, x := range task.LabelIds {
-				fmt.Printf("@%s ", labelIntToString[x])
+
+			fmt.Printf("#%s ", mapByProjectID[task.ProjectID].Name)
+
+			if task.Due.String != "" {
+				fmt.Printf("<%s> ", task.Due.String)
 			}
-			fmt.Printf("#%s %s\n", projectIntToString[task.ProjectID], task.Due.String)
-			fmt.Println()
+
+			// loop thru labels, which are sorted, and display matching names
+			for _, label := range labels {
+				if ContainsInt(task.LabelIds, label.ID) {
+					fmt.Printf("@%s ", label.Name)
+				}
+			}
+			fmt.Printf("\n\n")
 		}
 	}
 }
