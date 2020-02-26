@@ -62,6 +62,9 @@ func ContainsInt(slice []int, want int) bool {
 }
 
 func main() {
+
+	var priority_lookup = [...]int{0, 4, 3, 2, 1}
+
 	// Get Todoist Client ID
 	// The ID is not in the source code to avoid someone reusing the ID
 	clientID, present := os.LookupEnv("TDCLIENTID")
@@ -201,6 +204,9 @@ func main() {
 					fmt.Printf("@%s ", label.Name)
 				}
 			}
+
+			fmt.Printf("p%d ", priority_lookup[task.Priority])
+
 			fmt.Printf("\n\n")
 		}
 	}
