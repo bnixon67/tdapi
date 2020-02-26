@@ -28,7 +28,7 @@ import (
 	"github.com/bnixon67/tdapi"
 )
 
-func ParseCommandLine() (tokenFile string, scopes []string, label string) {
+func ParseCommandLine() (tokenFile string, scopes []string, label string, project string) {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [options] request\n", os.Args[0])
 		fmt.Fprintln(flag.CommandLine.Output(), "options:")
@@ -39,6 +39,8 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string) {
 
 	flag.StringVar(&label, "label", "", "label to filter tasks")
 
+	flag.StringVar(&project, "project", "", "project to filter tasks")
+
 	var scopeString string
 	flag.StringVar(&scopeString,
 		"scopes", "data:read", "comma-seperated `scopes` to use for request")
@@ -47,7 +49,7 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string) {
 
 	scopes = strings.Split(scopeString, ",")
 
-	return tokenFile, scopes, label
+	return tokenFile, scopes, label, project
 }
 
 func ContainsInt(slice []int, want int) bool {
@@ -75,7 +77,7 @@ func main() {
 	}
 
 	// parse command line to get path to the token file and scopes to use in request
-	tokenFile, scopes, labelName := ParseCommandLine()
+	tokenFile, scopes, labelName, projectName := ParseCommandLine()
 
 	// print usage if invalid command line
 	if len(flag.Args()) != 0 {
@@ -92,10 +94,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var projectID int
+
 	// save projects mapped by project ID
 	mapByProjectID := make(map[int]tdapi.Project)
 	for _, project := range resp {
 		mapByProjectID[project.ID] = project
+		if project.Name == projectName {
+			projectID = project.ID
+		}
 	}
 
 	// get all labels
@@ -178,7 +185,8 @@ func main() {
 
 	// loop thru and display approproiate tasks
 	for _, task := range tasks {
-		if labelID == 0 || ContainsInt(task.LabelIds, labelID) {
+		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) &&
+			(projectID == 0 || projectID == task.ProjectID) {
 			fmt.Printf("%s\n", task.Content)
 
 			fmt.Printf("#%s ", mapByProjectID[task.ProjectID].Name)
