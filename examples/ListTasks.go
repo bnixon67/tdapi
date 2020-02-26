@@ -108,6 +108,12 @@ func main() {
 		}
 	}
 
+	// Project not found
+	if projectName != "" && projectID == 0 {
+		fmt.Printf("Project %q not found.\n", projectName)
+		return
+	}
+
 	// get all labels
 	labels, err := todoistClient.GetAllLabels()
 	if err != nil {
