@@ -20,22 +20,22 @@ package tdapi
 import "time"
 
 type Project struct {
-	ID           int    `json:"id"`
+	ID           int64  `json:"id"`
 	Name         string `json:"name"`
-	Parent       int    `json:"parent"`
+	Parent       int64  `json:"parent"`
 	Order        int    `json:"order"`
 	CommentCount int    `json:"comment_count"`
 }
 
 type Task struct {
 	// Task id.
-	ID int `json:"id"`
+	ID int64 `json:"id"`
 
 	// Task’s project id (read-only).
-	ProjectID int `json:"project_id"`
+	ProjectID int64 `json:"project_id"`
 
 	// ID of section task belongs to.
-	SectionID int `json:"section_id"`
+	SectionID int64 `json:"section_id"`
 
 	// Task content.
 	Content string `json:"content"`
@@ -44,10 +44,10 @@ type Task struct {
 	Completed bool `json:"completed"`
 
 	// Array of label ids, associated with a task.
-	LabelIds []int `json:"label_ids"`
+	LabelIds []int64 `json:"label_ids"`
 
 	// ID of parent task (read-only, absent for top-level tasks).
-	Parent int `json:"parent,omitempty"`
+	Parent int64 `json:"parent,omitempty"`
 
 	// Position under the same parent or project for top-level tasks (read-only).
 	Order int `json:"order"`
@@ -87,7 +87,7 @@ type Task struct {
 
 type Label struct {
 	// The id of the label.
-	ID int `json:"id"`
+	ID int64 `json:"id"`
 
 	// The name of the label.
 	Name string `json:"name"`
@@ -116,13 +116,13 @@ Id	Hexadecimal	Id	Hexadecimal
 
 type Comment struct {
 	// Comment id.
-	ID int `json:"id"`
+	ID int64 `json:"id"`
 
 	// Comment’s task id (for task comments).
-	TaskID int `json:"task_id,omitempty"`
+	TaskID int64 `json:"task_id,omitempty"`
 
 	// Comment’s project id (for project comments).
-	ProjectID int `json:"project_id,omitempty"`
+	ProjectID int64 `json:"project_id,omitempty"`
 
 	// Date and time when comment was added, RFC3339 format in UTC.
 	Posted time.Time `json:"posted"`
@@ -147,7 +147,7 @@ type Comment struct {
 		// files in Todoist may issue a browser warning.
 		FileURL string `json:"file_url,omitempty"`
 
-		FileSize    int    `json:"file_size,omitempty"`
+		FileSize    int64  `json:"file_size,omitempty"`
 		UploadState string `json:"upload_state,omitempty"`
 
 		ResourceType string `json:"resource_type"`

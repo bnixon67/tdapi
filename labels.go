@@ -37,10 +37,10 @@ func (c *TodoistClient) GetAllLabels() (response []Label, err error) {
 }
 
 // GetLabel returns a label by ID.
-func (c *TodoistClient) GetLabel(id int) (response Label, err error) {
+func (c *TodoistClient) GetLabel(id int64) (response Label, err error) {
 	var body []byte
 
-	body, err = c.Get("/labels/"+strconv.Itoa(id), nil)
+	body, err = c.Get("/labels/"+strconv.FormatInt(id, 10), nil)
 	if err != nil {
 		return response, err
 	}

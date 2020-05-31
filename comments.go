@@ -23,11 +23,11 @@ import (
 	"strconv"
 )
 
-func (c *TodoistClient) GetTaskComments(id int) (response []Comment, err error) {
+func (c *TodoistClient) GetTaskComments(id int64) (response []Comment, err error) {
 	var body []byte
 
 	query := url.Values{}
-	query.Set("task_id", strconv.Itoa(id))
+	query.Set("task_id", strconv.FormatInt(id, 10))
 
 	body, err = c.Get("/comments", query)
 	if err != nil {
