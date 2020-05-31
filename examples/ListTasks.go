@@ -52,7 +52,7 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string, projec
 	return tokenFile, scopes, label, project
 }
 
-func ContainsInt(slice []int, want int) bool {
+func ContainsInt(slice []int64, want int64) bool {
 	for _, value := range slice {
 		if value == want {
 			return true
@@ -97,10 +97,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var projectID int
+	var projectID int64
 
 	// save projects mapped by project ID
-	mapByProjectID := make(map[int]tdapi.Project)
+	mapByProjectID := make(map[int64]tdapi.Project)
 	for _, project := range resp {
 		mapByProjectID[project.ID] = project
 		if project.Name == projectName {
@@ -121,10 +121,10 @@ func main() {
 	}
 
 	// store labelID for given label or default to 0 for no label
-	var labelID int
+	var labelID int64
 
 	// save labels mapped by label ID
-	mapByLabelID := make(map[int]tdapi.Label)
+	mapByLabelID := make(map[int64]tdapi.Label)
 
 	// loop thru all labels
 	for _, label := range labels {
@@ -151,8 +151,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// sort tasks by priority, date, project order, task order
+	// sort tasks by project order, priority, date, task order
 	sort.Slice(tasks, func(i, j int) bool {
+		// sort by Project order
+		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
+			return true
+		}
+		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
+			return false
+		}
+
 		// sort by Priority, reverse order since p4=1 and p1=4
 		if tasks[i].Priority > tasks[j].Priority {
 			return true
@@ -180,25 +188,28 @@ func main() {
 			return false
 		}
 
-		// sort by Project order
-		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
-			return true
-		}
-		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
-			return false
-		}
-
 		// sort by Task Order
 		return tasks[i].Order < tasks[j].Order
 	})
+
+	var lastProject int64 = 0
 
 	// loop thru and display approproiate tasks
 	for _, task := range tasks {
 		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) &&
 			(projectID == 0 || projectID == task.ProjectID) {
+
+			if lastProject != task.ProjectID {
+				fmt.Printf("----- #%s\n\n",
+					mapByProjectID[task.ProjectID].Name)
+				lastProject = task.ProjectID
+			}
+
 			fmt.Printf("%s\n", task.Content)
 
-			fmt.Printf("#%s ", mapByProjectID[task.ProjectID].Name)
+			fmt.Printf("  ")
+
+			fmt.Printf("P%d ", priority_lookup[task.Priority])
 
 			if task.Due.String != "" {
 				fmt.Printf("<%s> ", task.Due.String)
@@ -210,8 +221,6 @@ func main() {
 					fmt.Printf("@%s ", label.Name)
 				}
 			}
-
-			fmt.Printf("p%d ", priority_lookup[task.Priority])
 
 			fmt.Printf("\n\n")
 		}
