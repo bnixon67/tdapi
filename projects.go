@@ -19,6 +19,7 @@ package tdapi
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 )
 
@@ -37,10 +38,15 @@ func (c *TodoistClient) GetAllProjects() (response []Project, err error) {
 }
 
 // GetProject returns a JSON object containing a project object related to the given id.
-func (c *TodoistClient) GetProject(id int) (response Project, err error) {
+func (c *TodoistClient) GetProject(id int64) (response Project, err error) {
 	var body []byte
 
-	body, err = c.Get("/projects/"+strconv.Itoa(id), nil)
+	// project id 0 returns array of projects
+	if id == 0 {
+		return response, errors.New("Invalid project id 0")
+	}
+
+	body, err = c.Get("/projects/"+strconv.FormatInt(id, 10), nil)
 	if err != nil {
 		return response, err
 	}
