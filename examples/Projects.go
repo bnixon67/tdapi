@@ -93,10 +93,4 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(prj)
-
-	prj, err = todoistClient.GetProject(nameMap["Work"].ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(prj)
 }
