@@ -200,7 +200,7 @@ func main() {
 			(projectID == 0 || projectID == task.ProjectID) {
 
 			if lastProject != task.ProjectID {
-				fmt.Printf("----- #%s\n\n",
+				fmt.Printf("-- %s\n\n",
 					mapByProjectID[task.ProjectID].Name)
 				lastProject = task.ProjectID
 			}
