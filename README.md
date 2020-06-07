@@ -4,7 +4,7 @@ tdapi provides a Go interface for the [Todoist REST API](https://developer.todoi
 
 **This package and any related application is not created by, affiliated with, or supported by Doist.**
 
-**This is still a work in progress, but does have some working examples.**
+**This is still a work in progress, but does have some working examples. I use ListTasks as an easy way to extract data from ToDoist.**
 
 In order to use this package, you must register an application in the [Todoist App Management console](https://developer.todoist.com/appconsole.html). Use `https://example.com/redirect` as the **OAuth redirect URL** or adjust the source code to match the URL you entered.
 
