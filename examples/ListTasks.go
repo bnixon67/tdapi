@@ -23,12 +23,15 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/bnixon67/tdapi"
 )
 
-func ParseCommandLine() (tokenFile string, scopes []string, label string, project string) {
+func ParseCommandLine() (tokenFile string, scopes []string, label string,
+	project string, priorities []int64) {
+
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [options] request\n", os.Args[0])
 		fmt.Fprintln(flag.CommandLine.Output(), "options:")
@@ -45,11 +48,24 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string, projec
 	flag.StringVar(&scopeString,
 		"scopes", "data:read", "comma-seperated `scopes` to use for request")
 
+	var prioritiesString string
+	flag.StringVar(&prioritiesString,
+		"priorities", "1,2,3,4", "comma-seperated `priorities` to use for request")
+
 	flag.Parse()
 
 	scopes = strings.Split(scopeString, ",")
 
-	return tokenFile, scopes, label, project
+	for _, priority := range strings.Split(prioritiesString, ",") {
+		priorityInt, err := strconv.ParseInt(priority, 10, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		priorities = append(priorities, priorityInt)
+	}
+
+	return tokenFile, scopes, label, project, priorities
 }
 
 func ContainsInt(slice []int64, want int64) bool {
@@ -63,7 +79,7 @@ func ContainsInt(slice []int64, want int64) bool {
 
 func main() {
 
-	var priority_lookup = [...]int{0, 4, 3, 2, 1}
+	var priority_lookup = [...]int64{0, 4, 3, 2, 1}
 
 	// Get Todoist Client ID
 	// The ID is not in the source code to avoid someone reusing the ID
@@ -80,7 +96,7 @@ func main() {
 	}
 
 	// parse command line to get path to the token file and scopes to use in request
-	tokenFile, scopes, labelName, projectName := ParseCommandLine()
+	tokenFile, scopes, labelName, projectName, priorities := ParseCommandLine()
 
 	// print usage if invalid command line
 	if len(flag.Args()) != 0 {
@@ -197,7 +213,8 @@ func main() {
 	// loop thru and display approproiate tasks
 	for _, task := range tasks {
 		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) &&
-			(projectID == 0 || projectID == task.ProjectID) {
+			(projectID == 0 || projectID == task.ProjectID) &&
+			ContainsInt(priorities, priority_lookup[task.Priority]) {
 
 			if lastProject != task.ProjectID {
 				fmt.Printf("-- %s\n\n",
