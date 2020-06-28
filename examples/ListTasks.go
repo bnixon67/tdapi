@@ -25,12 +25,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/bnixon67/tdapi"
 )
 
 func ParseCommandLine() (tokenFile string, scopes []string, label string,
-	project string, priorities []int64) {
+	project string, priorities []int64, html bool) {
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [options] request\n", os.Args[0])
@@ -52,6 +53,8 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string,
 	flag.StringVar(&prioritiesString,
 		"priorities", "1,2,3,4", "comma-seperated `priorities` to use for request")
 
+	flag.BoolVar(&html, "html", false, "display in html format")
+
 	flag.Parse()
 
 	scopes = strings.Split(scopeString, ",")
@@ -65,7 +68,7 @@ func ParseCommandLine() (tokenFile string, scopes []string, label string,
 		priorities = append(priorities, priorityInt)
 	}
 
-	return tokenFile, scopes, label, project, priorities
+	return
 }
 
 func ContainsInt(slice []int64, want int64) bool {
@@ -96,7 +99,7 @@ func main() {
 	}
 
 	// parse command line to get path to the token file and scopes to use in request
-	tokenFile, scopes, labelName, projectName, priorities := ParseCommandLine()
+	tokenFile, scopes, labelName, projectName, priorities, html := ParseCommandLine()
 
 	// print usage if invalid command line
 	if len(flag.Args()) != 0 {
@@ -208,38 +211,96 @@ func main() {
 		return tasks[i].Order < tasks[j].Order
 	})
 
+	type DisplayTask struct {
+		Content  string
+		Priority int64
+		Labels   []string
+		Due      string
+	}
+
+	type DisplayProject struct {
+		Project string
+		Tasks   []DisplayTask
+	}
+
+	var displayProjects []DisplayProject
 	var lastProject int64 = 0
 
-	// loop thru and display approproiate tasks
+	// loop thru and build display structures for use in template
 	for _, task := range tasks {
 		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) &&
 			(projectID == 0 || projectID == task.ProjectID) &&
 			ContainsInt(priorities, priority_lookup[task.Priority]) {
 
+			var displayTask DisplayTask
+
 			if lastProject != task.ProjectID {
-				fmt.Printf("-- %s\n\n",
-					mapByProjectID[task.ProjectID].Name)
+				displayProjects = append(displayProjects,
+					DisplayProject{Project: mapByProjectID[task.ProjectID].Name})
 				lastProject = task.ProjectID
 			}
 
-			fmt.Printf("%s\n", task.Content)
+			displayTask.Content = task.Content
 
-			fmt.Printf("  ")
-
-			fmt.Printf("P%d ", priority_lookup[task.Priority])
+			displayTask.Priority = priority_lookup[task.Priority]
 
 			if task.Due.String != "" {
-				fmt.Printf("<%s> ", task.Due.String)
+				displayTask.Due = task.Due.String
 			}
 
 			// loop thru labels, which are sorted, and display matching names
 			for _, label := range labels {
 				if ContainsInt(task.LabelIds, label.ID) {
-					fmt.Printf("@%s ", label.Name)
+					displayTask.Labels = append(displayTask.Labels, label.Name)
 				}
 			}
 
-			fmt.Printf("\n\n")
+			displayProjects[len(displayProjects)-1].Tasks = append(displayProjects[len(displayProjects)-1].Tasks, displayTask)
 		}
+	}
+
+	const txtTemplate = `
+{{- range . -}}
+#{{.Project}}
+  {{- range .Tasks }}
+  {{ .Content }}
+  P{{ .Priority }} {{ if .Due }}<{{ .Due }}> {{ end }}{{ range .Labels }}@{{ . }} {{ end }}
+  {{ end }}
+{{ end -}}
+`
+
+	const htmlTemplate = `
+{{- $lastProject := "" -}}
+<!DOCTYPE html>
+<html>
+<body>
+{{- range . }}
+<h1>{{.Project}}</h1>
+  <ul>
+  {{- range .Tasks }}
+  <li>
+  {{ .Content }} <em>( Priority {{ .Priority }}, {{ if .Due }}Due {{ .Due }},{{ end }} {{ range .Labels }}@{{ . }} {{ end }}</em>)
+  </li>
+  {{ end }}
+  </ul>
+{{ end -}}
+</body>
+</html>
+`
+
+	var t *template.Template
+
+	if html {
+		t, err = template.New("output").Parse(htmlTemplate)
+	} else {
+		t, err = template.New("output").Parse(txtTemplate)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = t.Execute(os.Stdout, displayProjects)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
