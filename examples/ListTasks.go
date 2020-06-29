@@ -264,7 +264,7 @@ func main() {
 #{{.Project}}
   {{- range .Tasks }}
   {{ .Content }}
-  P{{ .Priority }} {{ if .Due }}<{{ .Due }}> {{ end }}{{ range .Labels }}@{{ . }} {{ end }}
+  P{{ .Priority }} {{ if .Due }}<{{ .Due }}> {{ end }}{{ Join .Labels "," }}
   {{ end }}
 {{ end -}}
 `
@@ -273,13 +273,16 @@ func main() {
 {{- $lastProject := "" -}}
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+</head>
 <body>
 {{- range . }}
 <h1>{{.Project}}</h1>
   <ul>
   {{- range .Tasks }}
   <li>
-  {{ .Content }} <em>( Priority {{ .Priority }}, {{ if .Due }}Due {{ .Due }},{{ end }} {{ range .Labels }}@{{ . }} {{ end }}</em>)
+  {{ .Content }} <em>(Priority {{ .Priority }}, {{- if .Due }} Due {{ .Due }},{{ end }} {{ Join .Labels ", " }})</em>
   </li>
   {{ end }}
   </ul>
@@ -288,12 +291,14 @@ func main() {
 </html>
 `
 
+	funcMap := template.FuncMap{ "Join": strings.Join }
+
 	var t *template.Template
 
 	if html {
-		t, err = template.New("output").Parse(htmlTemplate)
+		t, err = template.New("output").Funcs(funcMap).Parse(htmlTemplate)
 	} else {
-		t, err = template.New("output").Parse(txtTemplate)
+		t, err = template.New("output").Funcs(funcMap).Parse(txtTemplate)
 	}
 	if err != nil {
 		log.Fatal(err)
