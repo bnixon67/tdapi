@@ -281,10 +281,8 @@ func main() {
 <h1>{{.Project}}</h1>
   <ul>
   {{- range .Tasks }}
-  <li>
-  {{ .Content }} <em>(Priority {{ .Priority }}, {{- if .Due }} Due {{ .Due }},{{ end }} {{ Join .Labels ", " }})</em>
-  </li>
-  {{ end }}
+  <li>{{ .Content }} <em>(P{{ .Priority }} {{- if .Due }}, Due {{ .Due }}{{ end }} {{- if .Labels }}, {{ Join .Labels ", " }}{{ end }})</em></li>
+  {{- end }}
   </ul>
 {{ end -}}
 </body>
