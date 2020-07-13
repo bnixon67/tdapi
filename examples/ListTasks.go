@@ -211,16 +211,23 @@ func main() {
 		return tasks[i].Order < tasks[j].Order
 	})
 
+	type DisplayLabel struct {
+		Name     string
+		HexColor string
+	}
+
 	type DisplayTask struct {
-		Content  string
-		Priority int64
-		Labels   []string
-		Due      string
+		Content          string
+		Priority         int64
+		PriorityHexColor string
+		Labels           []DisplayLabel
+		Due              string
 	}
 
 	type DisplayProject struct {
-		Project string
-		Tasks   []DisplayTask
+		Project  string
+		HexColor string
+		Tasks    []DisplayTask
 	}
 
 	var displayProjects []DisplayProject
@@ -236,13 +243,15 @@ func main() {
 
 			if lastProject != task.ProjectID {
 				displayProjects = append(displayProjects,
-					DisplayProject{Project: mapByProjectID[task.ProjectID].Name})
+					DisplayProject{Project: mapByProjectID[task.ProjectID].Name,
+						HexColor: tdapi.ColorToHex[mapByProjectID[task.ProjectID].Color]})
 				lastProject = task.ProjectID
 			}
 
 			displayTask.Content = task.Content
 
 			displayTask.Priority = priority_lookup[task.Priority]
+			displayTask.PriorityHexColor = tdapi.PriorityToHexColor[task.Priority]
 
 			if task.Due.String != "" {
 				displayTask.Due = task.Due.String
@@ -251,11 +260,15 @@ func main() {
 			// loop thru labels, which are sorted, and display matching names
 			for _, label := range labels {
 				if ContainsInt(task.LabelIds, label.ID) {
-					displayTask.Labels = append(displayTask.Labels, label.Name)
+					displayTask.Labels = append(displayTask.Labels,
+						DisplayLabel{label.Name,
+							tdapi.ColorToHex[label.Color]})
 				}
 			}
 
-			displayProjects[len(displayProjects)-1].Tasks = append(displayProjects[len(displayProjects)-1].Tasks, displayTask)
+			displayProjects[len(displayProjects)-1].Tasks =
+				append(displayProjects[len(displayProjects)-1].Tasks,
+					displayTask)
 		}
 	}
 
@@ -264,7 +277,7 @@ func main() {
 #{{.Project}}
   {{- range .Tasks }}
   {{ .Content }}
-  P{{ .Priority }} {{ if .Due }}<{{ .Due }}> {{ end }}{{ Join .Labels "," }}
+  P{{ .Priority }} {{- if .Due }}, <{{ .Due }}>{{ end }}{{- range .Labels }}, {{ .Name }}{{ end }}
   {{ end }}
 {{ end -}}
 `
@@ -278,10 +291,12 @@ func main() {
 </head>
 <body>
 {{- range . }}
-<h1>{{.Project}}</h1>
+<h1 style="color:{{.HexColor }};">{{.Project}}</h1>
   <ul>
   {{- range .Tasks }}
-  <li>{{ .Content }} <em>(P{{ .Priority }} {{- if .Due }}, Due {{ .Due }}{{ end }} {{- if .Labels }}, {{ Join .Labels ", " }}{{ end }})</em></li>
+  <li><span style="color:{{ .PriorityHexColor }};">{{ .Content }} (P{{ .Priority }}</span> {{- if .Due }}, Due {{ .Due }}{{ end }} 
+{{- range .Labels }}, <span style="color:{{ .HexColor }};">{{ .Name }}</span>{{ end -}}
+)</li>
   {{- end }}
   </ul>
 {{ end -}}
@@ -289,7 +304,7 @@ func main() {
 </html>
 `
 
-	funcMap := template.FuncMap{ "Join": strings.Join }
+	funcMap := template.FuncMap{"Join": strings.Join}
 
 	var t *template.Template
 

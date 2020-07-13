@@ -80,7 +80,8 @@ func main() {
 
 	fmt.Printf("count(Labels) = %d\n", len(labels))
 	for n, label := range labels {
-		fmt.Printf("%d: id=%d %s\n", n, label.ID, label.Name)
+		fmt.Printf("%d: id=%d name=%s color=%d colorHex=%s\n",
+			n, label.ID, label.Name, label.Color, tdapi.ColorToHex[label.Color])
 	}
 
 	label, err := todoistClient.GetLabel(labels[len(labels)-1].ID)

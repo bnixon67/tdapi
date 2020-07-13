@@ -82,7 +82,8 @@ func main() {
 
 	fmt.Printf("count(Projects) = %d\n", len(resp))
 	for n, project := range resp {
-		fmt.Printf("%d: id = %d\tname = %s\n", n, project.ID, project.Name)
+		fmt.Printf("%d: id = %d\tname = %s\tcolorHex = %s\n",
+			n, project.ID, project.Name, tdapi.ColorToHex[project.Color])
 
 		nameMap[project.Name] = project
 
