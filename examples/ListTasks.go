@@ -170,21 +170,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// sort tasks by project order, priority, date, task order
+	// sort tasks by priority, project order, date, task order
 	sort.Slice(tasks, func(i, j int) bool {
-		// sort by Project order
-		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
-			return true
-		}
-		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
-			return false
-		}
-
 		// sort by Priority, reverse order since p4=1 and p1=4
 		if tasks[i].Priority > tasks[j].Priority {
 			return true
 		}
 		if tasks[i].Priority < tasks[j].Priority {
+			return false
+		}
+
+		// sort by Project order
+		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
+			return true
+		}
+		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
 			return false
 		}
 
@@ -217,36 +217,27 @@ func main() {
 	}
 
 	type DisplayTask struct {
+		Project          string
+		ProjectHexColor  string
 		Content          string
 		Priority         int64
 		PriorityHexColor string
-		Labels           []DisplayLabel
 		Due              string
+		Labels           []DisplayLabel
 	}
 
-	type DisplayProject struct {
-		Project  string
-		HexColor string
-		Tasks    []DisplayTask
-	}
-
-	var displayProjects []DisplayProject
-	var lastProject int64 = 0
+	var displayTasks []DisplayTask
 
 	// loop thru and build display structures for use in template
 	for _, task := range tasks {
-		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) &&
-			(projectID == 0 || projectID == task.ProjectID) &&
-			ContainsInt(priorities, priority_lookup[task.Priority]) {
+		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) && // filter on label (if provided)
+			(projectID == 0 || projectID == task.ProjectID) && // filter on project (if provided)
+			ContainsInt(priorities, priority_lookup[task.Priority]) { // filter on priorities (if provided)
 
 			var displayTask DisplayTask
 
-			if lastProject != task.ProjectID {
-				displayProjects = append(displayProjects,
-					DisplayProject{Project: mapByProjectID[task.ProjectID].Name,
-						HexColor: tdapi.ColorToHex[mapByProjectID[task.ProjectID].Color]})
-				lastProject = task.ProjectID
-			}
+			displayTask.Project = mapByProjectID[task.ProjectID].Name
+			displayTask.ProjectHexColor = tdapi.ColorToHex[mapByProjectID[task.ProjectID].Color]
 
 			displayTask.Content = task.Content
 
@@ -266,40 +257,57 @@ func main() {
 				}
 			}
 
-			displayProjects[len(displayProjects)-1].Tasks =
-				append(displayProjects[len(displayProjects)-1].Tasks,
-					displayTask)
+			displayTasks = append(displayTasks, displayTask)
 		}
 	}
 
 	const txtTemplate = `
+{{- $lastPriority := 0  -}}
+{{- $lastProject  := "" -}}
 {{- range . -}}
-#{{.Project}}
-  {{- range .Tasks }}
-  {{ .Content }}
-  P{{ .Priority }} {{- if .Due }}, <{{ .Due }}>{{ end }}{{- range .Labels }}, {{ .Name }}{{ end }}
-  {{ end }}
+
+{{ if (ne $lastPriority .Priority) -}}
+{{ if (ne $lastPriority 0) }}{{ println }}{{ end -}}
+Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
+{{ end -}}
+
+{{ if (ne $lastProject .Project) -}}
+{{ printf "  %s" .Project }}{{ $lastProject = .Project }}
+{{ end -}}
+
+{{ printf "    %s" .Content }} {{- if .Due }} <{{ .Due }}>{{ end }} ({{- range $n, $v := .Labels }}{{ if (ne $n 0) }}, {{ end }}{{ .Name }}{{ end }})
 {{ end -}}
 `
 
 	const htmlTemplate = `
+{{- $lastPriority := 0  -}}
 {{- $lastProject := "" -}}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
+<title>Task List</title>
 </head>
 <body>
-{{- range . }}
-<h1 style="color:{{.HexColor }};">{{.Project}}</h1>
-  <ul>
-  {{- range .Tasks }}
-  <li><span style="color:{{ .PriorityHexColor }};">{{ .Content }} (P{{ .Priority }}</span> {{- if .Due }}, Due {{ .Due }}{{ end }} 
-{{- range .Labels }}, <span style="color:{{ .HexColor }};">{{ .Name }}</span>{{ end -}}
-)</li>
-  {{- end }}
-  </ul>
+{{ range . -}}
+
+{{ if (ne $lastPriority .Priority) -}}
+{{ if (ne $lastPriority 0) }}{{ println }}{{ end -}}
+{{ if (ne $lastProject "") }}</ul>{{ end }}
+<h1 style="color:{{.PriorityHexColor}};">Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}</h1>
 {{ end -}}
+
+{{ if (ne $lastProject .Project) -}}
+{{ if (ne $lastProject "") }}</ul>{{ end }}
+<h2 style="color: {{ .ProjectHexColor }};">{{ .Project }}{{ $lastProject = .Project }}</h2>
+<ul>
+{{ end -}}
+
+<li>
+{{ printf "    %s" .Content }} {{- if .Due }} <{{ .Due }}>{{ end }} ({{- range $n, $v := .Labels }}{{ if (ne $n 0) }}, {{ end }}<span style="color:{{ .HexColor }};">{{ .Name }}</span>{{ end }})
+</li>
+{{ end -}}
+</ul>
+
 </body>
 </html>
 `
@@ -317,7 +325,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = t.Execute(os.Stdout, displayProjects)
+	err = t.Execute(os.Stdout, displayTasks)
 	if err != nil {
 		log.Fatal(err)
 	}
