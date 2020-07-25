@@ -303,7 +303,10 @@ Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
 {{ end -}}
 
 <li>
-{{ printf "    %s" .Content }} {{- if .Due }} <{{ .Due }}>{{ end }} ({{- range $n, $v := .Labels }}{{ if (ne $n 0) }}, {{ end }}<span style="color:{{ .HexColor }};">{{ .Name }}</span>{{ end }})
+{{ .Content }} {{ if .Due }} &lt;<em>{{ .Due }}</em>&gt;{{ end }}
+(<span style="color:{{.PriorityHexColor}};">P{{ .Priority }}</span>,
+<span style="color: {{ .ProjectHexColor }};">#{{ .Project }}</span>
+{{- range $n, $v := .Labels }} , <span style="color:{{ .HexColor }};">@{{ .Name }}</span>{{ end -}})
 </li>
 {{ end -}}
 </ul>
