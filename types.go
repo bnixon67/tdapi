@@ -1,18 +1,17 @@
 /*
-Copyright 2020 Bill Nixon
+Copyright 2021 Bill Nixon
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published
-by the Free Software Foundation, either version 3 of the License,
-or (at your option) any later version.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package tdapi
@@ -32,7 +31,7 @@ type Task struct {
 	// Task id.
 	ID int64 `json:"id"`
 
-	// Task’s project id (read-only).
+	// TaskÃ¢ÂÂs project id (read-only).
 	ProjectID int64 `json:"project_id"`
 
 	// ID of section task belongs to.
@@ -61,16 +60,16 @@ type Task struct {
 		// Human defined date in arbitrary format.
 		String string `json:"string"`
 
-		// Date in format YYYY-MM-DD corrected to user’s timezone.
+		// Date in format YYYY-MM-DD corrected to userÃ¢ÂÂs timezone.
 		Date string `json:"date"`
 
-		// Only returned if exact due time set (i.e. it’s not a whole-day task),
+		// Only returned if exact due time set (i.e. itÃ¢ÂÂs not a whole-day task),
 		// date and time in RFC3339 format in UTC.
 		Datetime *time.Time `json:"datetime,omitempty"`
 
-		// Only returned if exact due time set, user’s timezone definition either in
-		// tzdata-compatible format (“Europe/Berlin”) or as a string specifying east
-		// of UTC offset as “UTC±HH:MM” (i.e. “UTC-01:00”).
+		// Only returned if exact due time set, userÃ¢ÂÂs timezone definition either in
+		// tzdata-compatible format (Ã¢ÂÂEurope/BerlinÃ¢ÂÂ) or as a string specifying east
+		// of UTC offset as Ã¢ÂÂUTCÃÂ±HH:MMÃ¢ÂÂ (i.e. Ã¢ÂÂUTC-01:00Ã¢ÂÂ).
 		Timezone string `json:"timezone,omitempty"`
 
 		// Flag to indicate recurring.
@@ -96,7 +95,7 @@ type Label struct {
 	// Number used by clients to sort list of labels.
 	Order int `json:"order"`
 
-	// Color id. It’s a value between 30 and 49, refer to Colors for more info.
+	// Color id. ItÃ¢ÂÂs a value between 30 and 49, refer to Colors for more info.
 	Color int `json:"color"`
 }
 
@@ -136,10 +135,10 @@ type Comment struct {
 	// Comment id.
 	ID int64 `json:"id"`
 
-	// Comment’s task id (for task comments).
+	// CommentÃ¢ÂÂs task id (for task comments).
 	TaskID int64 `json:"task_id,omitempty"`
 
-	// Comment’s project id (for project comments).
+	// CommentÃ¢ÂÂs project id (for project comments).
 	ProjectID int64 `json:"project_id,omitempty"`
 
 	// Date and time when comment was added, RFC3339 format in UTC.
@@ -157,7 +156,7 @@ type Comment struct {
 		FileType string `json:"file_type,omitempty"`
 
 		// The URL where the file is located (a string value
-		// representing an HTTP URL). Note that we don’t cache
+		// representing an HTTP URL). Note that we donÃ¢ÂÂt cache
 		// the remote content on our servers and stream or expose
 		// files directly from third party resources. In particular
 		// this means that you should avoid providing links to
