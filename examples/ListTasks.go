@@ -169,6 +169,28 @@ func main() {
 		log.Fatal(err)
 	}
 
+	sort.Slice(tasks, func(i, j int) bool {
+		// sort by Project order
+		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
+			return true
+		}
+		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
+			return false
+		}
+
+		// sort by Priority, reverse order since p4=1 and p1=4
+		if tasks[i].Priority > tasks[j].Priority {
+			return true
+		}
+		if tasks[i].Priority < tasks[j].Priority {
+			return false
+		}
+
+		// sort by Task Order
+		return tasks[i].Order < tasks[j].Order
+	})
+
+	/*
 	// sort tasks by priority, project order, date, task order
 	sort.Slice(tasks, func(i, j int) bool {
 		// sort by Priority, reverse order since p4=1 and p1=4
@@ -209,6 +231,7 @@ func main() {
 		// sort by Task Order
 		return tasks[i].Order < tasks[j].Order
 	})
+	*/
 
 	type DisplayLabel struct {
 		Name     string
@@ -220,6 +243,7 @@ func main() {
 		ProjectHexColor  string
 		Content          string
 		Priority         int64
+		Order            int
 		PriorityHexColor string
 		Due              string
 		Labels           []DisplayLabel
@@ -239,6 +263,7 @@ func main() {
 			displayTask.ProjectHexColor = tdapi.ColorToHex[mapByProjectID[task.ProjectID].Color]
 
 			displayTask.Content = task.Content
+			displayTask.Order = task.Order
 
 			displayTask.Priority = priority_lookup[task.Priority]
 			displayTask.PriorityHexColor = tdapi.PriorityToHexColor[task.Priority]
@@ -265,6 +290,19 @@ func main() {
 {{- $lastProject  := "" -}}
 {{- range . -}}
 
+{{ if (ne $lastProject .Project) -}}
+{{ printf "%s" .Project }}{{ $lastProject = .Project }}
+{{ end -}}
+
+{{ printf "  %s" .Content }} p{{ .Priority }} {{- if .Due }} <{{ .Due }}>{{ end }} {{- range $n, $v := .Labels }} @{{ .Name }}{{ end }}
+{{ end -}}
+`
+/*
+	const txtTemplate = `
+{{- $lastPriority := 0  -}}
+{{- $lastProject  := "" -}}
+{{- range . -}}
+
 {{ if (ne $lastPriority .Priority) -}}
 {{ if (ne $lastPriority 0) }}{{ println }}{{ end -}}
 Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
@@ -277,7 +315,41 @@ Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
 {{ printf "    %s" .Content }} {{- if .Due }} <{{ .Due }}>{{ end }} ({{- range $n, $v := .Labels }}{{ if (ne $n 0) }}, {{ end }}{{ .Name }}{{ end }})
 {{ end -}}
 `
+*/
 
+	const htmlTemplate = `
+{{- $lastProject := "" -}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Task List</title>
+</head>
+<body style="font-family:sans-serif;">
+{{ range . -}}
+
+{{ if (ne $lastProject .Project) -}}
+{{ if (ne $lastProject "") }}</ul>{{ end }}
+<h2 style="color: {{ .ProjectHexColor }};">{{ .Project }}{{ $lastProject = .Project }}</h2>
+<ul>
+{{ end -}}
+
+<li>
+{{ .Content }}
+{{ if .Due }}&lt;<em>{{ .Due }}</em>&gt;{{ end }}
+<span style="color:{{.PriorityHexColor}};">P{{ .Priority }}</span>
+{{ range $n, $v := .Labels -}}
+<span style="color:{{ .HexColor }};">@{{ .Name }}</span>
+{{ end -}}
+</li>
+
+{{ end -}}
+</ul>
+
+</body>
+</html>
+`
+/*
 	const htmlTemplate = `
 {{- $lastPriority := 0  -}}
 {{- $lastProject := "" -}}
@@ -313,6 +385,7 @@ Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
 </body>
 </html>
 `
+*/
 
 	funcMap := template.FuncMap{"Join": strings.Join}
 
