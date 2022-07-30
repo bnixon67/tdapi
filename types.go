@@ -31,7 +31,7 @@ type Task struct {
 	// Task id.
 	ID int64 `json:"id"`
 
-	// TaskÃ¢ÂÂs project id (read-only).
+	// Project ID of the task
 	ProjectID int64 `json:"project_id"`
 
 	// ID of section task belongs to.
@@ -39,6 +39,9 @@ type Task struct {
 
 	// Task content.
 	Content string `json:"content"`
+
+	// Description for the task.
+	Description string `json:"description,omitempty"`
 
 	// Flag to mark completed tasks.
 	Completed bool `json:"completed"`

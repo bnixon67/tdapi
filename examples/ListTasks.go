@@ -29,50 +29,77 @@ import (
 	"github.com/bnixon67/tdapi"
 )
 
-func ParseCommandLine() (tokenFile string, scopes []string, label string,
-	project string, priorities []int64, html bool) {
+// Options represents possbile command line options
+type Options struct {
+	TokenFile   string
+	Scopes      []string
+	LabelName   string
+	ProjectName string
+	Priorities  []int64
+	Html        bool
+}
 
+// DisplayLabel represents a Label for display
+type DisplayLabel struct {
+	Name     string
+	HexColor string
+}
+
+// DisplayTask represents a Task for display
+type DisplayTask struct {
+	Project          string
+	ProjectHexColor  string
+	Content          string
+	Description      string
+	Priority         int64
+	Order            int
+	PriorityHexColor string
+	Due              string
+	Labels           []DisplayLabel
+}
+
+// ParseCommandLine parses the command line returning the options provided or default value.
+func ParseCommandLine() Options {
+	var opt Options
+	var scopeString string
+	var prioritiesString string
+
+	// define usage message
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [options] request\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [options]\n", os.Args[0])
 		fmt.Fprintln(flag.CommandLine.Output(), "options:")
 		flag.PrintDefaults()
 	}
 
-	flag.StringVar(&tokenFile, "token", ".token.todoist", "path to `file` to use for token")
-
-	flag.StringVar(&label, "label", "", "label to filter tasks")
-
-	flag.StringVar(&project, "project", "", "project to filter tasks")
-
-	var scopeString string
-	flag.StringVar(&scopeString,
-		"scopes", "data:read", "comma-seperated `scopes` to use for request")
-
-	var prioritiesString string
-	flag.StringVar(&prioritiesString,
-		"priorities", "1,2,3,4", "comma-seperated `priorities` to use for request")
-
-	flag.BoolVar(&html, "html", false, "display in html format")
+	// define name, default value, and usage for flag values and bind to variable
+	flag.StringVar(&opt.TokenFile, "token", ".token.todoist", "path to `file` to use for token")
+	flag.StringVar(&opt.LabelName, "label", "", "label to filter tasks")
+	flag.StringVar(&opt.ProjectName, "project", "", "project to filter tasks")
+	flag.StringVar(&scopeString, "scopes", "data:read", "comma-seperated `scopes` to use for request")
+	flag.StringVar(&prioritiesString, "priorities", "1,2,3,4", "comma-seperated `priorities` to use for request")
+	flag.BoolVar(&opt.Html, "html", false, "display in html format")
 
 	flag.Parse()
 
-	scopes = strings.Split(scopeString, ",")
+	// convert string to slice for scopes
+	opt.Scopes = strings.Split(scopeString, ",")
 
+	// convert string to slice for priorities
 	for _, priority := range strings.Split(prioritiesString, ",") {
 		priorityInt, err := strconv.ParseInt(priority, 10, 64)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		priorities = append(priorities, priorityInt)
+		opt.Priorities = append(opt.Priorities, priorityInt)
 	}
 
-	return
+	return opt
 }
 
-func ContainsInt(slice []int64, want int64) bool {
-	for _, value := range slice {
-		if value == want {
+// ContainsInt64 reports whether v is present in s.
+func ContainsInt64(s []int64, v int64) bool {
+	for _, value := range s {
+		if value == v {
 			return true
 		}
 	}
@@ -80,25 +107,24 @@ func ContainsInt(slice []int64, want int64) bool {
 }
 
 func main() {
+	// task priority is stored as an intger from 1 (normal, default value) to 4 (urgent).
+	// priorityValue maps priority to a value, with urgent as 1.
+	var priorityValue = [...]int64{0, 4, 3, 2, 1}
 
-	var priority_lookup = [...]int64{0, 4, 3, 2, 1}
-
-	// Get Todoist Client ID
-	// The ID is not in the source code to avoid someone reusing the ID
+	// get Todoist Client ID from env to avoid storing in source code
 	clientID, present := os.LookupEnv("TDCLIENTID")
 	if !present {
 		log.Fatal("Must set TDCLIENTID")
 	}
 
-	// Get Todoist Client Secret
-	// The Secret is not in the source code to avoid someone reusing the ID
+	// get Todoist Client Secret from env to avoid storing in source code
 	clientSecret, present := os.LookupEnv("TDCLIENTSECRET")
 	if !present {
 		log.Fatal("Must set TDCLIENTSECRET")
 	}
 
-	// parse command line to get path to the token file and scopes to use in request
-	tokenFile, scopes, labelName, projectName, priorities, html := ParseCommandLine()
+	// parse command line to get program options
+	opt := ParseCommandLine()
 
 	// print usage if invalid command line
 	if len(flag.Args()) != 0 {
@@ -107,28 +133,29 @@ func main() {
 	}
 
 	// create todoist client
-	todoistClient := tdapi.New(tokenFile, clientID, clientSecret, scopes)
+	todoistClient := tdapi.New(opt.TokenFile, clientID, clientSecret, opt.Scopes)
 
 	// get all projects
-	resp, err := todoistClient.GetAllProjects()
+	projects, err := todoistClient.GetAllProjects()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// projectID contains the id of the project to filter, or default of 0 if not provided
 	var projectID int64
 
-	// save projects mapped by project ID
-	mapByProjectID := make(map[int64]tdapi.Project)
-	for _, project := range resp {
-		mapByProjectID[project.ID] = project
-		if project.Name == projectName {
+	// projectByID is a map to allow the lookup of a project by ID
+	projectByID := make(map[int64]tdapi.Project)
+	for _, project := range projects {
+		projectByID[project.ID] = project
+		if project.Name == opt.ProjectName {
 			projectID = project.ID
 		}
 	}
 
-	// Project not found
-	if projectName != "" && projectID == 0 {
-		fmt.Printf("Project %q not found.\n", projectName)
+	// if project name was supplied, check if it exists
+	if opt.ProjectName != "" && projectID == 0 {
+		fmt.Printf("Project %q not found.\n", opt.ProjectName)
 		return
 	}
 
@@ -138,23 +165,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// store labelID for given label or default to 0 for no label
+	// labelID contains the id of the label to filter, or default of 0 if not provided
 	var labelID int64
 
-	// save labels mapped by label ID
-	mapByLabelID := make(map[int64]tdapi.Label)
-
-	// loop thru all labels
+	// labelByID is a map to allow the lookup of a label by ID
+	labelByID := make(map[int64]tdapi.Label)
 	for _, label := range labels {
-		mapByLabelID[label.ID] = label
-		if label.Name == labelName {
+		labelByID[label.ID] = label
+		if label.Name == opt.LabelName {
 			labelID = label.ID
 		}
 	}
 
-	// Label not found
-	if labelName != "" && labelID == 0 {
-		fmt.Printf("Label %q not found.\n", labelName)
+	// if label name was supplied, check if it exists
+	if opt.LabelName != "" && labelID == 0 {
+		fmt.Printf("Label %q not found.\n", opt.LabelName)
 		return
 	}
 
@@ -169,12 +194,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// sort tasks by Project, Priority, Due Date, Task Order
 	sort.Slice(tasks, func(i, j int) bool {
 		// sort by Project order
-		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
+		if projectByID[tasks[i].ProjectID].Order < projectByID[tasks[j].ProjectID].Order {
 			return true
 		}
-		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
+		if projectByID[tasks[i].ProjectID].Order > projectByID[tasks[j].ProjectID].Order {
 			return false
 		}
 
@@ -186,41 +212,15 @@ func main() {
 			return false
 		}
 
-		// sort by Task Order
-		return tasks[i].Order < tasks[j].Order
-	})
-
-	/*
-	// sort tasks by priority, project order, date, task order
-	sort.Slice(tasks, func(i, j int) bool {
-		// sort by Priority, reverse order since p4=1 and p1=4
-		if tasks[i].Priority > tasks[j].Priority {
-			return true
-		}
-		if tasks[i].Priority < tasks[j].Priority {
-			return false
-		}
-
-		// sort by Project order
-		if mapByProjectID[tasks[i].ProjectID].Order < mapByProjectID[tasks[j].ProjectID].Order {
-			return true
-		}
-		if mapByProjectID[tasks[i].ProjectID].Order > mapByProjectID[tasks[j].ProjectID].Order {
-			return false
-		}
-
-		// sort by Date
-		// copy dates to new variable to default empty date to max value for sorting
+		// sort by Due Date
 		iDate := tasks[i].Due.Date
+		jDate := tasks[j].Due.Date
 		if iDate == "" {
 			iDate = "9999-99-99"
 		}
-
-		jDate := tasks[j].Due.Date
 		if jDate == "" {
 			jDate = "9999-99-99"
 		}
-
 		if iDate < jDate {
 			return true
 		}
@@ -231,41 +231,25 @@ func main() {
 		// sort by Task Order
 		return tasks[i].Order < tasks[j].Order
 	})
-	*/
 
-	type DisplayLabel struct {
-		Name     string
-		HexColor string
-	}
-
-	type DisplayTask struct {
-		Project          string
-		ProjectHexColor  string
-		Content          string
-		Priority         int64
-		Order            int
-		PriorityHexColor string
-		Due              string
-		Labels           []DisplayLabel
-	}
-
+	// build display structures for use in output template
 	var displayTasks []DisplayTask
-
-	// loop thru and build display structures for use in template
 	for _, task := range tasks {
-		if (labelID == 0 || ContainsInt(task.LabelIds, labelID)) && // filter on label (if provided)
-			(projectID == 0 || projectID == task.ProjectID) && // filter on project (if provided)
-			ContainsInt(priorities, priority_lookup[task.Priority]) { // filter on priorities (if provided)
+		// filter tasks
+		if (labelID == 0 || ContainsInt64(task.LabelIds, labelID)) &&
+			(projectID == 0 || projectID == task.ProjectID) &&
+			ContainsInt64(opt.Priorities, priorityValue[task.Priority]) {
 
 			var displayTask DisplayTask
 
-			displayTask.Project = mapByProjectID[task.ProjectID].Name
-			displayTask.ProjectHexColor = tdapi.ColorToHex[mapByProjectID[task.ProjectID].Color]
+			displayTask.Project = projectByID[task.ProjectID].Name
+			displayTask.ProjectHexColor = tdapi.ColorToHex[projectByID[task.ProjectID].Color]
 
 			displayTask.Content = task.Content
+			displayTask.Description = task.Description
 			displayTask.Order = task.Order
 
-			displayTask.Priority = priority_lookup[task.Priority]
+			displayTask.Priority = priorityValue[task.Priority]
 			displayTask.PriorityHexColor = tdapi.PriorityToHexColor[task.Priority]
 
 			if task.Due.String != "" {
@@ -274,7 +258,7 @@ func main() {
 
 			// loop thru labels, which are sorted, and display matching names
 			for _, label := range labels {
-				if ContainsInt(task.LabelIds, label.ID) {
+				if ContainsInt64(task.LabelIds, label.ID) {
 					displayTask.Labels = append(displayTask.Labels,
 						DisplayLabel{label.Name,
 							tdapi.ColorToHex[label.Color]})
@@ -294,28 +278,9 @@ func main() {
 {{ printf "%s" .Project }}{{ $lastProject = .Project }}
 {{ end -}}
 
-{{ printf "  %s" .Content }} p{{ .Priority }} {{- if .Due }} <{{ .Due }}>{{ end }} {{- range $n, $v := .Labels }} @{{ .Name }}{{ end }}
+{{ printf "  %s" .Content }} p{{ .Priority }} {{- if .Due }} <{{ .Due }}>{{ end }} {{- range $n, $v := .Labels }} @{{ .Name }}{{ end }} {{ if .Description }} - {{ .Description }}{{ end }}
 {{ end -}}
 `
-/*
-	const txtTemplate = `
-{{- $lastPriority := 0  -}}
-{{- $lastProject  := "" -}}
-{{- range . -}}
-
-{{ if (ne $lastPriority .Priority) -}}
-{{ if (ne $lastPriority 0) }}{{ println }}{{ end -}}
-Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
-{{ end -}}
-
-{{ if (ne $lastProject .Project) -}}
-{{ printf "  %s" .Project }}{{ $lastProject = .Project }}
-{{ end -}}
-
-{{ printf "    %s" .Content }} {{- if .Due }} <{{ .Due }}>{{ end }} ({{- range $n, $v := .Labels }}{{ if (ne $n 0) }}, {{ end }}{{ .Name }}{{ end }})
-{{ end -}}
-`
-*/
 
 	const htmlTemplate = `
 {{- $lastProject := "" -}}
@@ -338,9 +303,8 @@ Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
 {{ .Content }}
 {{ if .Due }}&lt;<em>{{ .Due }}</em>&gt;{{ end }}
 <span style="color:{{.PriorityHexColor}};">P{{ .Priority }}</span>
-{{ range $n, $v := .Labels -}}
-<span style="color:{{ .HexColor }};">@{{ .Name }}</span>
-{{ end -}}
+{{ range $n, $v := .Labels -}}<span style="color:{{ .HexColor }};">@{{ .Name }}</span> {{ end -}}
+{{ if .Description }}<div style="font-size: 90%;">{{ .Description }}</div>{{ end }}
 </li>
 
 {{ end -}}
@@ -349,49 +313,12 @@ Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}
 </body>
 </html>
 `
-/*
-	const htmlTemplate = `
-{{- $lastPriority := 0  -}}
-{{- $lastProject := "" -}}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>Task List</title>
-</head>
-<body>
-{{ range . -}}
-
-{{ if (ne $lastPriority .Priority) -}}
-{{ if (ne $lastPriority 0) }}{{ println }}{{ end -}}
-{{ if (ne $lastProject "") }}</ul>{{ end }}
-<h1 style="color:{{.PriorityHexColor}};">Priority {{ .Priority }}{{ $lastPriority = .Priority }}{{ $lastProject = "" }}</h1>
-{{ end -}}
-
-{{ if (ne $lastProject .Project) -}}
-{{ if (ne $lastProject "") }}</ul>{{ end }}
-<h2 style="color: {{ .ProjectHexColor }};">{{ .Project }}{{ $lastProject = .Project }}</h2>
-<ul>
-{{ end -}}
-
-<li>
-{{ .Content }} {{ if .Due }} &lt;<em>{{ .Due }}</em>&gt;{{ end }}
-(<span style="color:{{.PriorityHexColor}};">P{{ .Priority }}</span>,
-<span style="color: {{ .ProjectHexColor }};">#{{ .Project }}</span>
-{{- range $n, $v := .Labels }} , <span style="color:{{ .HexColor }};">@{{ .Name }}</span>{{ end -}})
-</li>
-{{ end -}}
-</ul>
-
-</body>
-</html>
-`
-*/
 
 	funcMap := template.FuncMap{"Join": strings.Join}
 
 	var t *template.Template
 
-	if html {
+	if opt.Html {
 		t, err = template.New("output").Funcs(funcMap).Parse(htmlTemplate)
 	} else {
 		t, err = template.New("output").Funcs(funcMap).Parse(txtTemplate)
