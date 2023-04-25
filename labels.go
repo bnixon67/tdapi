@@ -21,6 +21,20 @@ import (
 	"strconv"
 )
 
+// GetAllSharedLabels returns a JSON-encoded array containing all shared labels.
+func (c *TodoistClient) GetAllSharedLabels() (response []string, err error) {
+	var body []byte
+
+	body, err = c.Get("/labels/shared", nil)
+	if err != nil {
+		return response, err
+	}
+
+	err = json.Unmarshal(body, &response)
+
+	return response, err
+}
+
 // GetAllLabels returns a JSON-encoded array containing all user labels.
 func (c *TodoistClient) GetAllLabels() (response []Label, err error) {
 	var body []byte

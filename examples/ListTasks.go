@@ -142,10 +142,10 @@ func main() {
 	}
 
 	// projectID contains the id of the project to filter, or default of 0 if not provided
-	var projectID int64
+	var projectID string
 
 	// projectByID is a map to allow the lookup of a project by ID
-	projectByID := make(map[int64]tdapi.Project)
+	projectByID := make(map[string]tdapi.Project)
 	for _, project := range projects {
 		projectByID[project.ID] = project
 		if project.Name == opt.ProjectName {
@@ -154,7 +154,7 @@ func main() {
 	}
 
 	// if project name was supplied, check if it exists
-	if opt.ProjectName != "" && projectID == 0 {
+	if opt.ProjectName != "" && projectID == "" {
 		fmt.Printf("Project %q not found.\n", opt.ProjectName)
 		return
 	}
@@ -195,6 +195,7 @@ func main() {
 	}
 
 	// sort tasks by Project, Priority, Due Date, Task Order
+	/*
 	sort.Slice(tasks, func(i, j int) bool {
 		// sort by Project order
 		if projectByID[tasks[i].ProjectID].Order < projectByID[tasks[j].ProjectID].Order {
@@ -231,13 +232,14 @@ func main() {
 		// sort by Task Order
 		return tasks[i].Order < tasks[j].Order
 	})
+	*/
 
 	// build display structures for use in output template
 	var displayTasks []DisplayTask
 	for _, task := range tasks {
 		// filter tasks
 		if (labelID == 0 || ContainsInt64(task.LabelIds, labelID)) &&
-			(projectID == 0 || projectID == task.ProjectID) &&
+			(projectID == "" || projectID == task.ProjectID) &&
 			ContainsInt64(opt.Priorities, priorityValue[task.Priority]) {
 
 			var displayTask DisplayTask

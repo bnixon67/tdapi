@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	apiBase     = "https://api.todoist.com/rest/v1"
+	apiBase     = "https://api.todoist.com/rest/v2"
 	authBase    = "https://todoist.com/oauth"
 	authURL     = authBase + "/authorize"
 	tokenURL    = authBase + "/access_token"

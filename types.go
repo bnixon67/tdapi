@@ -19,20 +19,20 @@ package tdapi
 import "time"
 
 type Project struct {
-	ID           int64  `json:"id"`
+	ID           string  `json:"id"`
 	Name         string `json:"name"`
-	Parent       int64  `json:"parent"`
+	Parent       int64  `json:"parent_id"`
 	Order        int    `json:"order"`
-	Color        int    `json:"color"`
+	Color        string    `json:"color"`
 	CommentCount int    `json:"comment_count"`
 }
 
 type Task struct {
 	// Task id.
-	ID int64 `json:"id"`
+	ID string `json:"id"`
 
 	// Project ID of the task
-	ProjectID int64 `json:"project_id"`
+	ProjectID string `json:"project_id"`
 
 	// ID of section task belongs to.
 	SectionID int64 `json:"section_id"`
@@ -89,41 +89,44 @@ type Task struct {
 }
 
 type Label struct {
-	// The id of the label.
-	ID int64 `json:"id"`
+	// Label ID.
+	ID string `json:"id"`
 
-	// The name of the label.
+	// Label name.
 	Name string `json:"name"`
+
+	// The color of the label icon.
+	Color string `json:"color"`
 
 	// Number used by clients to sort list of labels.
 	Order int `json:"order"`
 
-	// Color id. ItÃ¢ÂÂs a value between 30 and 49, refer to Colors for more info.
-	Color int `json:"color"`
+	// Whether the label is a favorite.
+	IsFavorite bool `json:"is_favorite"`
 }
 
 // ColorToHex maps color ids for a project, label, or filter, to a hex value.
-var ColorToHex = [...]string{
-	30: "#b8256f",
-	31: "#db4035",
-	32: "#ff9933",
-	33: "#fad000",
-	34: "#afb83b",
-	35: "#7ecc49",
-	36: "#299438",
-	37: "#6accbc",
-	38: "#158fad",
-	39: "#14aaf5",
-	40: "#96c3eb",
-	41: "#4073ff",
-	42: "#884dff",
-	43: "#af38eb",
-	44: "#eb96eb",
-	45: "#e05194",
-	46: "#ff8d85",
-	47: "#808080",
-	48: "#b8b8b8",
-	49: "#ccac93",
+var ColorToHex = map[string]string {
+	"berry_red": "#b8256f",
+	"red": "#db4035",
+	"orange": "#ff9933",
+	"yellow": "#fad000",
+	"olive_green": "#afb83b",
+	"lime_green": "#7ecc49",
+	"green": "#299438",
+	"mint_green": "#6accbc",
+	"teal": "#158fad",
+	"sky_blue": "#14aaf5",
+	"light_blue": "#96c3eb",
+	"blue": "#4073ff",
+	"grape": "#884dff",
+	"violet": "#af38eb",
+	"lavendar": "#eb96eb",
+	"magenta": "#e05194",
+	"salmon": "#ff8d85",
+	"charcoal": "#808080",
+	"grey": "#b8b8b8",
+	"taupe": "#ccac93",
 }
 
 // PriorityToHexColor maps task priority (1=p4, ..., 4=p1) to a hex value.

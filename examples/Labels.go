@@ -77,15 +77,27 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("count(Labels) = %d\n", len(labels))
+	fmt.Printf("count(labels) = %d\n", len(labels))
 	for n, label := range labels {
-		fmt.Printf("%d: id=%d name=%s color=%d colorHex=%s\n",
-			n, label.ID, label.Name, label.Color, tdapi.ColorToHex[label.Color])
+		fmt.Printf("%d: %+v\n", n, label)
 	}
 
+	/*
 	label, err := todoistClient.GetLabel(labels[len(labels)-1].ID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(tdapi.VarToJsonString(label))
+	*/
+
+	sharedLabels, err := todoistClient.GetAllSharedLabels()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("count(sharedLabels) = %d\n", len(sharedLabels))
+	for n, label := range sharedLabels {
+		fmt.Printf("%d: name=%s\n", n, label)
+	}
+
 }
