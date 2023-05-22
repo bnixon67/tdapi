@@ -18,39 +18,55 @@ package tdapi
 
 import (
 	"encoding/json"
-	"errors"
-	"strconv"
+	"fmt"
 )
 
-// GetAllProjects returns JSON-encoded array containing all user projects.
-func (c *TodoistClient) GetAllProjects() (response []Project, err error) {
-	var body []byte
-
-	body, err = c.Get("/projects", nil)
-	if err != nil {
-		return response, err
-	}
-
-	err = json.Unmarshal(body, &response)
-
-	return response, err
+// A Project represents a Todoist Project.
+// See https://developer.todoist.com/rest/v2/?shell#projects for more details.
+type Project struct {
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	Color          string  `json:"color"`
+	ParentID       *string `json:"parent_id"`
+	Order          int     `json:"order"`
+	CommentCount   int     `json:"comment_count"`
+	IsShared       bool    `json:"is_shared"`
+	IsFavorite     bool    `json:"is_favorite"`
+	IsInboxProject bool    `json:"is_inbox_project"`
+	IsTeamInbox    bool    `json:"is_team_inbox"`
+	ViewStyle      string  `json:"view_style"`
+	URL            string  `json:"url"`
 }
 
-// GetProject returns a JSON object containing a project object related to the given id.
-func (c *TodoistClient) GetProject(id int64) (response Project, err error) {
-	var body []byte
-
-	// project id 0 returns array of projects
-	if id == 0 {
-		return response, errors.New("Invalid project id 0")
-	}
-
-	body, err = c.Get("/projects/"+strconv.FormatInt(id, 10), nil)
+// GetProjects returns all user projects.
+func (c *TodoistClient) GetAllProjects() ([]Project, error) {
+	body, err := c.Get("/projects", nil)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
-	err = json.Unmarshal(body, &response)
+	var projects []Project
+	err = json.Unmarshal(body, &projects)
+	if err != nil {
+		return nil, err
+	}
 
-	return response, err
+	return projects, nil
+}
+
+// GetProject returns the project for the given project_id.
+func (c *TodoistClient) GetProject(project_id string) (Project, error) {
+	if project_id == "" {
+		return Project{}, fmt.Errorf("empty project ID")
+	}
+
+	body, err := c.Get("/projects/"+project_id, nil)
+	if err != nil {
+		return Project{}, err
+	}
+
+	var project Project
+	err = json.Unmarshal(body, &project)
+
+	return project, err
 }

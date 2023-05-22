@@ -109,7 +109,7 @@ func ContainsInt64(s []int64, v int64) bool {
 func main() {
 	// task priority is stored as an intger from 1 (normal, default value) to 4 (urgent).
 	// priorityValue maps priority to a value, with urgent as 1.
-	var priorityValue = [...]int64{0, 4, 3, 2, 1}
+	priorityValue := [...]int64{0, 4, 3, 2, 1}
 
 	// get Todoist Client ID from env to avoid storing in source code
 	clientID, present := os.LookupEnv("TDCLIENTID")
@@ -169,11 +169,11 @@ func main() {
 	var labelID int64
 
 	// labelByID is a map to allow the lookup of a label by ID
-	labelByID := make(map[int64]tdapi.Label)
+	// labelByID := make(map[int64]tdapi.PersonalLabel)
 	for _, label := range labels {
-		labelByID[label.ID] = label
+		// labelByID[label.ID] = label
 		if label.Name == opt.LabelName {
-			labelID = label.ID
+			// labelID = label.ID
 		}
 	}
 
@@ -196,42 +196,42 @@ func main() {
 
 	// sort tasks by Project, Priority, Due Date, Task Order
 	/*
-	sort.Slice(tasks, func(i, j int) bool {
-		// sort by Project order
-		if projectByID[tasks[i].ProjectID].Order < projectByID[tasks[j].ProjectID].Order {
-			return true
-		}
-		if projectByID[tasks[i].ProjectID].Order > projectByID[tasks[j].ProjectID].Order {
-			return false
-		}
+		sort.Slice(tasks, func(i, j int) bool {
+			// sort by Project order
+			if projectByID[tasks[i].ProjectID].Order < projectByID[tasks[j].ProjectID].Order {
+				return true
+			}
+			if projectByID[tasks[i].ProjectID].Order > projectByID[tasks[j].ProjectID].Order {
+				return false
+			}
 
-		// sort by Priority, reverse order since p4=1 and p1=4
-		if tasks[i].Priority > tasks[j].Priority {
-			return true
-		}
-		if tasks[i].Priority < tasks[j].Priority {
-			return false
-		}
+			// sort by Priority, reverse order since p4=1 and p1=4
+			if tasks[i].Priority > tasks[j].Priority {
+				return true
+			}
+			if tasks[i].Priority < tasks[j].Priority {
+				return false
+			}
 
-		// sort by Due Date
-		iDate := tasks[i].Due.Date
-		jDate := tasks[j].Due.Date
-		if iDate == "" {
-			iDate = "9999-99-99"
-		}
-		if jDate == "" {
-			jDate = "9999-99-99"
-		}
-		if iDate < jDate {
-			return true
-		}
-		if iDate > jDate {
-			return false
-		}
+			// sort by Due Date
+			iDate := tasks[i].Due.Date
+			jDate := tasks[j].Due.Date
+			if iDate == "" {
+				iDate = "9999-99-99"
+			}
+			if jDate == "" {
+				jDate = "9999-99-99"
+			}
+			if iDate < jDate {
+				return true
+			}
+			if iDate > jDate {
+				return false
+			}
 
-		// sort by Task Order
-		return tasks[i].Order < tasks[j].Order
-	})
+			// sort by Task Order
+			return tasks[i].Order < tasks[j].Order
+		})
 	*/
 
 	// build display structures for use in output template
@@ -259,13 +259,17 @@ func main() {
 			}
 
 			// loop thru labels, which are sorted, and display matching names
-			for _, label := range labels {
-				if ContainsInt64(task.LabelIds, label.ID) {
-					displayTask.Labels = append(displayTask.Labels,
-						DisplayLabel{label.Name,
-							tdapi.ColorToHex[label.Color]})
+			/*
+				for _, label := range labels {
+						if ContainsInt64(task.LabelIds, label.ID) {
+							displayTask.Labels = append(displayTask.Labels,
+								DisplayLabel{
+									label.Name,
+									tdapi.ColorToHex[label.Color],
+								})
+						}
 				}
-			}
+			*/
 
 			displayTasks = append(displayTasks, displayTask)
 		}

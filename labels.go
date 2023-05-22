@@ -18,8 +18,31 @@ package tdapi
 
 import (
 	"encoding/json"
-	"strconv"
 )
+
+// A PersonalLabel represents a Todoist personal label.
+// See https://developer.todoist.com/rest/v2/?shell#labels for more details.
+type PersonalLabel struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Color      string `json:"color"`
+	Order      int    `json:"order"`
+	IsFavorite bool   `json:"is_favorite"`
+}
+
+// GetAllLabels returns a JSON-encoded array containing all user labels.
+func (c *TodoistClient) GetAllPersonalLabels() (response []PersonalLabel, err error) {
+	var body []byte
+
+	body, err = c.Get("/labels", nil)
+	if err != nil {
+		return response, err
+	}
+
+	err = json.Unmarshal(body, &response)
+
+	return response, err
+}
 
 // GetAllSharedLabels returns a JSON-encoded array containing all shared labels.
 func (c *TodoistClient) GetAllSharedLabels() (response []string, err error) {
@@ -35,25 +58,11 @@ func (c *TodoistClient) GetAllSharedLabels() (response []string, err error) {
 	return response, err
 }
 
-// GetAllLabels returns a JSON-encoded array containing all user labels.
-func (c *TodoistClient) GetAllLabels() (response []Label, err error) {
+// GetPersonalLabel returns a label by ID.
+func (c *TodoistClient) GetPersonalLabel(id string) (response PersonalLabel, err error) {
 	var body []byte
 
-	body, err = c.Get("/labels", nil)
-	if err != nil {
-		return response, err
-	}
-
-	err = json.Unmarshal(body, &response)
-
-	return response, err
-}
-
-// GetLabel returns a label by ID.
-func (c *TodoistClient) GetLabel(id int64) (response Label, err error) {
-	var body []byte
-
-	body, err = c.Get("/labels/"+strconv.FormatInt(id, 10), nil)
+	body, err = c.Get("/labels/"+id, nil)
 	if err != nil {
 		return response, err
 	}

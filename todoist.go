@@ -49,15 +49,10 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-// Get executes the Rodost REST  API call, returning the response body.
-//
+// Get executes the Todoist REST  API call, returning the response body.
 // Query parmeters can be included to specify and control the amount of data returned in a response.
-//
-// Exact query parameters varies from one API operation to another.
-//
-// More information can be found at https://docs.microsoft.com/en-us/graph/query-parameters
+// See https://developer.todoist.com/rest/v2/#overview
 func (c *TodoistClient) Get(urlString string, query url.Values) (body []byte, err error) {
-
 	// parse the URL string
 	url, err := url.Parse(apiBase + urlString)
 	if err != nil {
@@ -67,7 +62,7 @@ func (c *TodoistClient) Get(urlString string, query url.Values) (body []byte, er
 	// add the query parameters to the URL
 	url.RawQuery = query.Encode()
 
-	//fmt.Println("DEBUG:", url.String())
+	// fmt.Println("DEBUG:", url.String())
 
 	// execute the request
 	resp, err := c.httpClient.Get(url.String())
@@ -102,7 +97,6 @@ func (c *TodoistClient) Get(urlString string, query url.Values) (body []byte, er
 //
 // More information can be found at https://docs.microsoft.com/en-us/graph/query-parameters
 func (c *TodoistClient) Put(urlString string, query url.Values, data io.Reader) (body []byte, err error) {
-
 	// parse the URL string
 	url, err := url.Parse(apiBase + urlString)
 	if err != nil {
@@ -112,7 +106,7 @@ func (c *TodoistClient) Put(urlString string, query url.Values, data io.Reader) 
 	// add the query parameters to the URL
 	url.RawQuery = query.Encode()
 
-	//fmt.Println("DEBUG:", url.String())
+	// fmt.Println("DEBUG:", url.String())
 
 	req, err := http.NewRequest(http.MethodPut, url.String(), data)
 	if err != nil {
@@ -148,7 +142,7 @@ func (c *TodoistClient) Put(urlString string, query url.Values, data io.Reader) 
 	return body, err
 }
 
-// TodoistClient is a client connection to the MS Graph API
+// TodoistClient is a client connection to the Todoist REST API. See https://developer.todoist.com/rest/v2/#overview
 type TodoistClient struct {
 	httpClient *http.Client
 }
@@ -170,7 +164,7 @@ func New(tokenFileName string, id string, secret string, scopes []string) *Todoi
 	// default Context that is never canceled, has no values, and has no deadline
 	ctx := context.Background()
 
-	//scopes = append(scopes, "offline_access")
+	// scopes = append(scopes, "offline_access")
 
 	// OAuth2 configuration object
 	conf := &oauth2.Config{

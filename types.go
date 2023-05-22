@@ -18,15 +18,6 @@ package tdapi
 
 import "time"
 
-type Project struct {
-	ID           string  `json:"id"`
-	Name         string `json:"name"`
-	Parent       int64  `json:"parent_id"`
-	Order        int    `json:"order"`
-	Color        string    `json:"color"`
-	CommentCount int    `json:"comment_count"`
-}
-
 type Task struct {
 	// Task id.
 	ID string `json:"id"`
@@ -88,45 +79,28 @@ type Task struct {
 	Created time.Time `json:"created"`
 }
 
-type Label struct {
-	// Label ID.
-	ID string `json:"id"`
-
-	// Label name.
-	Name string `json:"name"`
-
-	// The color of the label icon.
-	Color string `json:"color"`
-
-	// Number used by clients to sort list of labels.
-	Order int `json:"order"`
-
-	// Whether the label is a favorite.
-	IsFavorite bool `json:"is_favorite"`
-}
-
 // ColorToHex maps color ids for a project, label, or filter, to a hex value.
-var ColorToHex = map[string]string {
-	"berry_red": "#b8256f",
-	"red": "#db4035",
-	"orange": "#ff9933",
-	"yellow": "#fad000",
+var ColorToHex = map[string]string{
+	"berry_red":   "#b8256f",
+	"red":         "#db4035",
+	"orange":      "#ff9933",
+	"yellow":      "#fad000",
 	"olive_green": "#afb83b",
-	"lime_green": "#7ecc49",
-	"green": "#299438",
-	"mint_green": "#6accbc",
-	"teal": "#158fad",
-	"sky_blue": "#14aaf5",
-	"light_blue": "#96c3eb",
-	"blue": "#4073ff",
-	"grape": "#884dff",
-	"violet": "#af38eb",
-	"lavendar": "#eb96eb",
-	"magenta": "#e05194",
-	"salmon": "#ff8d85",
-	"charcoal": "#808080",
-	"grey": "#b8b8b8",
-	"taupe": "#ccac93",
+	"lime_green":  "#7ecc49",
+	"green":       "#299438",
+	"mint_green":  "#6accbc",
+	"teal":        "#158fad",
+	"sky_blue":    "#14aaf5",
+	"light_blue":  "#96c3eb",
+	"blue":        "#4073ff",
+	"grape":       "#884dff",
+	"violet":      "#af38eb",
+	"lavendar":    "#eb96eb",
+	"magenta":     "#e05194",
+	"salmon":      "#ff8d85",
+	"charcoal":    "#808080",
+	"grey":        "#b8b8b8",
+	"taupe":       "#ccac93",
 }
 
 // PriorityToHexColor maps task priority (1=p4, ..., 4=p1) to a hex value.
