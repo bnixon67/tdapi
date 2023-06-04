@@ -36,6 +36,8 @@ import (
 )
 
 const (
+	// baseURL     = "https://api.todoist.com"
+	// apiBase     = "/rest/v2"
 	apiBase     = "https://api.todoist.com/rest/v2"
 	authBase    = "https://todoist.com/oauth"
 	authURL     = authBase + "/authorize"
@@ -54,6 +56,7 @@ func init() {
 // See https://developer.todoist.com/rest/v2/#overview
 func (c *TodoistClient) Get(urlString string, query url.Values) (body []byte, err error) {
 	// parse the URL string
+	// url, err := url.Parse(c.BaseURL + apiBase + urlString)
 	url, err := url.Parse(apiBase + urlString)
 	if err != nil {
 		return body, err
@@ -145,6 +148,7 @@ func (c *TodoistClient) Put(urlString string, query url.Values, data io.Reader) 
 // TodoistClient is a client connection to the Todoist REST API. See https://developer.todoist.com/rest/v2/#overview
 type TodoistClient struct {
 	httpClient *http.Client
+	// BaseURL    string
 }
 
 // New creates an initialized TodoistClient using the token from tokenFileName.
@@ -230,6 +234,7 @@ func New(tokenFileName string, id string, secret string, scopes []string) *Todoi
 
 	// create HTTP client using the provided token
 	client.httpClient = conf.Client(ctx, token)
+	// client.BaseURL = baseURL
 
 	return client
 }

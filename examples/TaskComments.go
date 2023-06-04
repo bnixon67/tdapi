@@ -72,7 +72,7 @@ func main() {
 
 	todoistClient := tdapi.New(tokenFile, clientID, clientSecret, scopes)
 
-	comments, err := todoistClient.GetTaskComments(3652140563)
+	comments, err := todoistClient.GetTaskComments(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
 	}
