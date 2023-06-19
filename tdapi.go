@@ -65,7 +65,7 @@ func (c *TodoistClient) Get(urlString string, query url.Values) (body []byte, er
 	// add the query parameters to the URL
 	url.RawQuery = query.Encode()
 
-	// fmt.Println("DEBUG:", url.String())
+	fmt.Println("DEBUG:", url.String())
 
 	// execute the request
 	resp, err := c.httpClient.Get(url.String())
@@ -287,7 +287,7 @@ func writeTokenToFile(fileName string, token *oauth2.Token) {
 	return
 }
 
-func prettyPrintJson(src []byte) {
+func PrettyPrintJson(src []byte) {
 	var out bytes.Buffer
 	json.Indent(&out, src, "", " ")
 	fmt.Println("=== BEGIN ===")

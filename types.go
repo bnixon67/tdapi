@@ -18,67 +18,6 @@ package tdapi
 
 import "time"
 
-type Task struct {
-	// Task id.
-	ID string `json:"id"`
-
-	// Project ID of the task
-	ProjectID string `json:"project_id"`
-
-	// ID of section task belongs to.
-	SectionID int64 `json:"section_id"`
-
-	// Task content.
-	Content string `json:"content"`
-
-	// Description for the task.
-	Description string `json:"description,omitempty"`
-
-	// Flag to mark completed tasks.
-	Completed bool `json:"completed"`
-
-	// Array of label ids, associated with a task.
-	LabelIds []int64 `json:"label_ids"`
-
-	// ID of parent task (read-only, absent for top-level tasks).
-	Parent int64 `json:"parent,omitempty"`
-
-	// Position under the same parent or project for top-level tasks (read-only).
-	Order int `json:"order"`
-
-	// Task priority from 1 (normal, default value) to 4 (urgent).
-	Priority int `json:"priority"`
-
-	// Task due date/time.
-	Due struct {
-		// Human defined date in arbitrary format.
-		String string `json:"string"`
-
-		// Date in format YYYY-MM-DD corrected to userÃ¢ÂÂs timezone.
-		Date string `json:"date"`
-
-		// Only returned if exact due time set (i.e. itÃ¢ÂÂs not a whole-day task),
-		// date and time in RFC3339 format in UTC.
-		Datetime *time.Time `json:"datetime,omitempty"`
-
-		// Only returned if exact due time set, userÃ¢ÂÂs timezone definition either in
-		// tzdata-compatible format (Ã¢ÂÂEurope/BerlinÃ¢ÂÂ) or as a string specifying east
-		// of UTC offset as Ã¢ÂÂUTCÃÂ±HH:MMÃ¢ÂÂ (i.e. Ã¢ÂÂUTC-01:00Ã¢ÂÂ).
-		Timezone string `json:"timezone,omitempty"`
-
-		// Flag to indicate recurring.
-		Recurring bool `json:"recurring"`
-	} `json:"due"`
-
-	// URL to access this task in Todoist web interface.
-	URL string `json:"url,omitempty"`
-
-	CommentCount int `json:"comment_count"`
-
-	// DateTime when Task was created.
-	Created time.Time `json:"created"`
-}
-
 // ColorToHex maps color ids for a project, label, or filter, to a hex value.
 var ColorToHex = map[string]string{
 	"berry_red":   "#b8256f",

@@ -70,3 +70,31 @@ func (c *TodoistClient) GetProject(project_id string) (Project, error) {
 
 	return project, err
 }
+
+// ProjectByID returns a map to allow lookup of projects by ID.
+func ProjectByID(projects []Project) map[string]Project {
+	projectByID := make(map[string]Project, len(projects))
+	for _, project := range projects {
+		projectByID[project.ID] = project
+	}
+
+	return projectByID
+}
+
+// ChildProjectIDs returns a map of child IDs for each parent ID.
+// An empty parent ID contains all the top level projects.
+func ChildProjectIDs(projects []Project) map[string][]string {
+	projectByID := ProjectByID(projects)
+
+	childProjectIDs := make(map[string][]string)
+	for _, project := range projects {
+		parentID := ""
+		if project.ParentID != nil {
+			parentID = *projectByID[project.ID].ParentID
+		}
+		childProjectIDs[parentID] =
+			append(childProjectIDs[parentID], project.ID)
+	}
+
+	return childProjectIDs
+}

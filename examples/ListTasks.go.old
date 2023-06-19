@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -159,23 +158,27 @@ func main() {
 		return
 	}
 
-	// get all labels
-	labels, err := todoistClient.GetAllLabels()
-	if err != nil {
-		log.Fatal(err)
-	}
+	/*
+		// get all labels
+		labels, err := todoistClient.GetAllSharedLabels()
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
 
 	// labelID contains the id of the label to filter, or default of 0 if not provided
 	var labelID int64
 
-	// labelByID is a map to allow the lookup of a label by ID
-	// labelByID := make(map[int64]tdapi.PersonalLabel)
-	for _, label := range labels {
-		// labelByID[label.ID] = label
-		if label.Name == opt.LabelName {
-			// labelID = label.ID
+	/*
+		// labelByID is a map to allow the lookup of a label by ID
+		// labelByID := make(map[int64]tdapi.PersonalLabel)
+		for _, label := range labels {
+			// labelByID[label.ID] = label
+			if label.Name == opt.LabelName {
+				// labelID = label.ID
+			}
 		}
-	}
+	*/
 
 	// if label name was supplied, check if it exists
 	if opt.LabelName != "" && labelID == 0 {
@@ -183,10 +186,12 @@ func main() {
 		return
 	}
 
-	// sort labels by Order
-	sort.Slice(labels, func(i, j int) bool {
-		return labels[i].Order < labels[j].Order
-	})
+	/*
+		// sort labels by Order
+		sort.Slice(labels, func(i, j int) bool {
+			return labels[i].Order < labels[j].Order
+		})
+	*/
 
 	// get all tasks
 	tasks, err := todoistClient.GetActiveTasks()
